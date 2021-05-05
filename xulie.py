@@ -1,10 +1,5 @@
-import sys
-
-
 def collatz(number):
-    if number == 1:
-        sys.exit()
-    elif number % 2 == 0:
+    if number % 2 == 0:
         print("{}//2: {}".format(number, number // 2))
         return number // 2
     else :
