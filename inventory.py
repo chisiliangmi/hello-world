@@ -12,7 +12,7 @@ def addToInventory(inventory, addedItems):
     for i in range(len(addedItems)):
         if addedItems[i] in inventory:
             inventory[addedItems[i]] += 1
-            print("addedItems[{}]: {}".format(i, inventory[addedItems[i]]))
+            print("addedItems[{}]: {}".format(addedItems[i], inventory[addedItems[i]]))
         else:
             inventory.setdefault(addedItems[i], 1)
     return inventory
