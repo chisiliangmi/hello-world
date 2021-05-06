@@ -1,3 +1,5 @@
+#! python3
+# 从命令行运行脚本需要第一行的注释
 # 口令保管箱
 import sys, pyperclip
 
