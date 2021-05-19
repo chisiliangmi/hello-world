@@ -7,7 +7,7 @@ class CalNum:
         self.wb = openpyxl.load_workbook(file_path)
         self.sheet_names = self.wb.get_sheet_names()
 
-    def run_cal_num(self, city1, city2):
+    def run_cal_num(self, city):
         # 使用正则表达式以匹配工作表名字
         regex = ['.*去', '.*回', '\\W', '^X8.*']
         global symbol
@@ -17,20 +17,17 @@ class CalNum:
                 Regex = re.compile(regex[j])
                 reg = Regex.search(self.sheet_names[i])
                 if reg and j == 0:
-                    symbol_1 = i
-                    global num_leave_city1, num_leave_city2
-                    num_leave_city1, num_leave_city2 = self.zhida_leave(
-                        symbol_1, city1, city2)
-                    print("出境 %s 技术直达： %d" % (city1, num_leave_city1))
-                    print("出境 %s 技术直达： %d" % (city2, num_leave_city2))
-                    print('\n')
+                    symbol1 = i
+                    global num_leave_city
+                    num_leave_city = self.zhida_leave(
+                        symbol1, city)
+                    print("出境 %s 技术直达： %d" % (city, num_leave_city))
                 elif reg and j == 1:
                     symbol_2 = i
-                    global num_back_city1, num_back_city2
-                    num_back_city1, num_back_city2 = self.zhida_back(
-                        symbol_2, city1, city2)
-                    print("回程 %s 技术直达： %d" % (city1, num_back_city1))
-                    print("回程 %s 技术直达： %d" % (city2, num_back_city2))
+                    global num_back_city
+                    num_back_city = self.zhida_back(
+                        symbol_2, city)
+                    print("回程 %s 技术直达： %d" % (city, num_back_city))
                     print('\n')
                 elif reg and j == 2:
                     symbol.append(0)
@@ -39,100 +36,95 @@ class CalNum:
 
     # 技术直达车次
     # 计算去程
-    def zhida_leave(self, symbol_1, city1, city2):
+    def zhida_leave(self, symbol1, city):
         # 要操作的表
-        sheet = self.wb[self.sheet_names[symbol_1]]
-        num_leave_city1_ = 0
-        num_leave_city2_ = 0
+        sheet = self.wb[self.sheet_names[symbol1]]
+        num_leave_city_ = 0
         for row in range(5, sheet.max_row + 1):
             # 确定列车到达
-            if sheet['Y' + str(row)].value == city1 and sheet[
-                    'Z' + str(row)].value is not None:
-                num_leave_city1_ += 1
-            elif sheet['Y' + str(row)].value == city2 and sheet[
+            if sheet['Y' + str(row)].value == city and sheet[
                     'D' + str(row)].value is not None:
-                num_leave_city2_ += 1
+                num_leave_city_ += 1
 
-        return num_leave_city1_, num_leave_city2_
+        return num_leave_city_
+
 
     # 计算回程
-    def zhida_back(self, symbol_2, city1, city2):
-        sheet = self.wb[self.sheet_names[symbol_2]]
-        num_back_city1_ = 0
-        num_back_city2_ = 0
+    def zhida_back(self, symbol2, city):
+        sheet = self.wb[self.sheet_names[symbol2]]
+        num_back_city_ = 0
         for row in range(5, sheet.max_row + 1):
             # 确定列车出发
-            if sheet['C' + str(row)].value == str(city1) and sheet[
+            if sheet['C' + str(row)].value == str(city) and sheet[
                     'D' + str(row)].value is not None:
-                num_back_city1_ += 1
-            elif sheet['C' + str(row)].value == str(city2) and sheet[
-                    'D' + str(row)].value is not None:
-                num_back_city2_ += 1
-        return num_back_city1_, num_back_city2_
+                num_back_city_ += 1
 
-    def run_cal_num_(self, city1, city2):
+        return num_back_city_
+
+    def run_cal_num_(self, city):
         sym = []
         for i in range(len(symbol)):
             if symbol[i] == 0:
                 sym.append(i)
                 continue
+        sym.insert(0,0)
+        for i in range(len(sym)):
+            if i == 0:
+                symb = symbol[:sym[i+1]]
+                self.banlie(symb, city)
+            elif i == len(sym)-1:
+                symb = symbol[sym[i]+1:]
+                self.banlie(symb, city)
+            else:
+                symb = symbol[sym[i]+1:sym[i+1]]
+                self.banlie(symb, city)
 
-        sym1 = symbol[:sym[0]]
-        sym2 = symbol[sym[0] + 1:sym[1]]
-        sym3 = symbol[sym[1] + 1:sym[2]]
-        sym4 = symbol[sym[2] + 1:]
+    def check_train_leave(sheet, city):
+        if sheet['S3'].value == city:
+            return True
+        else:
+            return False
 
-        number_leave_city1 = 0
-        for i in range(len(sym1)):
-            sheet = self.wb[self.sheet_names[sym1[i]]]
-            number_leave_city = CalNum.train_leave(sheet, city1)
-            number_leave_city1 += number_leave_city
+    def check_train_back(sheet, city):
+        if sheet['C3'].value == city:
+            return True
+        else:
+            return False
 
-        print("出境 %s 班列： %d" % (city1, number_leave_city1))
-
-        number_leave_city2 = 0
-        for i in range(len(sym2)):
-            sheet = self.wb[self.sheet_names[sym2[i]]]
-            number_leave_city = CalNum.train_leave(sheet, city2)
-            number_leave_city2 += number_leave_city
-
-        print("出境 %s 班列： %d" % (city2, number_leave_city2))
-        print('\n')
-
-        number_back_city1 = 0
-        for i in range(len(sym3)):
-            sheet = self.wb[self.sheet_names[sym3[i]]]
-            number_back_city = CalNum.train_back(sheet, city1)
-            number_back_city1 += number_back_city
-
-        print("回程 %s 班列： %d" % (city1, number_back_city1))
-
-        number_back_city2 = 0
-        for i in range(len(sym4)):
-            sheet = self.wb[self.sheet_names[sym4[i]]]
-            number_back_city = CalNum.train_back(sheet, city2)
-            number_back_city2 += number_back_city
-
-        print("回程 %s 班列： %d" % (city2, number_back_city2))
-        print('\n')
+    def banlie(self, symb, city):
+        number_leave_city = 0
+        number_back_city = 0
+        for i in range(len(symb)):
+            sheet = self.wb[self.sheet_names[symb[i]]]
+            if CalNum.check_train_leave(sheet, city):
+                number_leave_city_ = CalNum.train_leave(sheet, city)
+                number_leave_city += number_leave_city_
+            elif CalNum.check_train_back(sheet, city):
+                number_back_city_ = CalNum.train_back(sheet, city)
+                number_back_city += number_back_city_
+        if number_leave_city != 0:
+            print("出境 %s 班列： %d" % (city, number_leave_city))
+        elif number_back_city != 0:
+            print("回程 %s 班列： %d" % (city, number_back_city))
+            print("\n")
 
     # 计算一个工作表的班列车次
     # 计算去程
     def train_leave(sheet, city):
-        number_leave_city = 0
+        number_leave_city_ = 0
         for row in range(10, 60):
-            if sheet['S3'].value == city and sheet[
+            if CalNum.check_train_leave(sheet, city) and sheet[
                     'B' + str(row)].value is not None:
-                number_leave_city += 1
+                number_leave_city_ += 1
 
-        return number_leave_city
+        return number_leave_city_
 
     # 计算回程
     def train_back(sheet, city):
-        number_back_city = 0
+        number_back_city_ = 0
         for row in range(10, 60):
-            if sheet['C3'].value == city and sheet[
+            if CalNum.check_train_back(sheet, city) and sheet[
                     'B' + str(row)].value is not None:
-                number_back_city += 1
+                number_back_city_ += 1
 
-        return number_back_city
+        return number_back_city_
