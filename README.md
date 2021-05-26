@@ -1,3 +1,3 @@
 # hello-world
-hello everyone, I want a real friend.
-I am trying, I have got much knowledge. Wish me a bright future.
+添加《让繁琐工作自动化》的一些小案例
+添加其他小案例
